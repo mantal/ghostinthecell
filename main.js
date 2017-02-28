@@ -3,7 +3,9 @@ let factories = Array.from(new Array(parseInt(readline()))).map((_, i) => { retu
     links: [],
 	owner: 0,
 	garrison: 0,
-	production: 0
+	production: 0,
+	incomingAllies: 0,
+	incomingEnemies: 0
 } });
 
 let linkCount = parseInt(readline());
@@ -41,7 +43,10 @@ function getMove(factory) {
 		if (tf.owner === 1)
 			return ;
 		if (!target || compare(tf, target) > 0) {
-			if (factory.garrison > tf.garrison) {
+			let expectedBalance = tf.incomingAllies - tf.garrison - tf.incomingEnemies;
+			if (expectedBalance > 0)
+				return ;
+			if (factory.garrison + expectedBalance > 0) {
 				target = tf;
 			}
 		}
@@ -68,22 +73,25 @@ while (true) {
 			factories[id].owner = arg1;
 			factories[id].garrison = arg2;
 			factories[id].production = arg3;
+			factories[id].incomingAllies = 0;
+			factories[id].incomingEnemies = 0;
+		}
+		else {
+        	if (arg1 == 1)
+				factories[arg3].incomingAllies += arg4;
+        	else
+				factories[arg3].incomingEnemies += arg4;
 		}
     }
 
-    let move = factories.filter(e => e.owner === 1).map(getMove);
-    if (move.length === 0)
-    	move = false;
-    else {
-		move = move.reduce((max, e) => {
-			if (!max)
-				return e;
-			return compare(max.to, e.to) > 0 ? max : e;
-		});
-	}
+    let move = factories.filter(e => e.owner === 1).map(getMove).map(m => {
+    	if (!m.to)
+    		return '';
+    	return `MOVE ${m.from.id} ${m.to.id} ${m.to.garrison + 1}`;
+	}).filter(s => s.length > 0).join(';');
 
-	if (!move.to)
+	if (move.trim().length === 0)
 		print('WAIT');
 	else
-		print(`MOVE ${move.from.id} ${move.to.id} ${move.to.garrison + 1}`);
+		print(move);
 }
