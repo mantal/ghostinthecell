@@ -35,26 +35,29 @@ function compare(fa, fb) {
 	return fa.garrison <= fb.garrison ? 1 : -1;
 }
 
-function getMove(factory) {
-    let target = false;
+function getExpectedEnemies(factory) {
+	return factory.garrison + factory.incomingEnemies + 1;
+}
 
-	factory.links.forEach(link => {
-		let tf = factories[link.to];
-		if (tf.owner === 1)
-			return ;
-		if (!target || compare(tf, target) > 0) {
-			let expectedBalance = tf.incomingAllies - tf.garrison - tf.incomingEnemies;
-			if (expectedBalance > 0)
-				return ;
-			if (factory.garrison + expectedBalance > 0) {
-				target = tf;
-			}
-		}
-	});
-	return {
-		from: factory,
-		to: target
-	};
+function getAttackValue(source, target) {
+	let expectedBalance = target.incomingAllies - getExpectedEnemies(target);
+	if (expectedBalance > 0)
+		return 0;
+	if (source.garrison + expectedBalance > 0)
+		return 1;
+	return -1;
+}
+
+function getMove(factory) {
+	return factory.links
+		.filter(l => factories[l.to].owner === -1 && getAttackValue(factory, factories[l.to]) > 0)
+		.map(l => factories[l.to])
+		.sort(compare)
+		.map(f => { return {
+			from: factory,
+			to: f,
+			quantity: getExpectedEnemies(f)
+		}; });
 }
 
 while (true) {
@@ -76,7 +79,7 @@ while (true) {
 			factories[id].incomingAllies = 0;
 			factories[id].incomingEnemies = 0;
 		}
-		else {
+		else if (entityType === 'TROOP') {
         	if (arg1 == 1)
 				factories[arg3].incomingAllies += arg4;
         	else
@@ -84,10 +87,13 @@ while (true) {
 		}
     }
 
-    let move = factories.filter(e => e.owner === 1).map(getMove).map(m => {
-    	if (!m.to)
-    		return '';
-    	return `MOVE ${m.from.id} ${m.to.id} ${m.to.garrison + 1}`;
+    let move = factories.filter(e => e.owner === 1).map(getMove).map(moves => {
+    	return moves.map(m => {
+			if (m.from.garrison < m.quantity)
+				return '';
+			m.from.garrison -= m.quantity;
+			return `MOVE ${m.from.id} ${m.to.id} ${m.to.garrison + 1}`;
+		}).filter(s => s.length > 0).join(';');
 	}).filter(s => s.length > 0).join(';');
 
 	if (move.trim().length === 0)
