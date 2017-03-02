@@ -50,7 +50,7 @@ function getAttackValue(source, target) {
 
 function getMove(factory) {
 	return factory.links
-		.filter(l => factories[l.to].owner === -1 && getAttackValue(factory, factories[l.to]) > 0)
+		.filter(l => factories[l.to].owner >= 0 && getAttackValue(factory, factories[l.to]) > 0)
 		.map(l => factories[l.to])
 		.sort(compare)
 		.map(f => { return {
