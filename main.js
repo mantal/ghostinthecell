@@ -85,6 +85,9 @@ while (true) {
 		}
     }
 
+	let allyProd = factories.filter(e => e.owner === 1).length > 0 ? factories.filter(e => e.owner === 1).reduce((prod, e) => prod + e.production, 0) : 0;
+	let enemyProd = factories.filter(e => e.owner === -1).length > 0 ?  factories.filter(e => e.owner === -1).reduce((prod, e) => prod + e.production, 0) : 0;
+
     let move = factories.filter(e => e.owner === 1).map(getMove).map(moves => {
     	return moves.map(m => {
 			if (m.from.garrison < m.quantity)
@@ -94,8 +97,12 @@ while (true) {
 		}).filter(s => s.length > 0).join(';');
 	}).filter(s => s.length > 0).join(';');
 
+    let action = '';
+
 	if (move.trim().length === 0)
-		print('WAIT');
+		action = 'WAIT';
 	else
-		print(move);
+		action = move;
+
+	print(action + ';MSG ' + allyProd + '/' + enemyProd);
 }
