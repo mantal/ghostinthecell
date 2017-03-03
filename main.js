@@ -19,24 +19,22 @@ for (let i = 0; i < linkCount; i++) {
 }
 
 function compare(fa, fb) {
-	if (!fa)
-		return -1;
-	if (!fb)
-		return 1;
 	if (fa.owner === 1)
 		return -1;
 	if (fb.owner === 1)
 		return 1;
-	if (fa.garrison == fb.garrison) {
-		if (fa.owner <= fb.owner)
-			return 1;
-		return fa.production >= fb.production;
-	}
-	return fa.garrison <= fb.garrison ? 1 : -1;
+	return getFactoryValue(fa) > getFactoryValue(fb) ? 1 : -1;
 }
 
 function getExpectedEnemies(factory) {
 	return factory.garrison + factory.incomingEnemies + 1;
+}
+
+function getFactoryValue(factory) {
+	if (factory.production === 0 && getExpectedEnemies(factory))
+		return -9999;//
+	return factory.production - getExpectedEnemies(factory);
+
 }
 
 function getAttackValue(source, target) {
