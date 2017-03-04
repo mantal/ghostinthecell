@@ -5,17 +5,43 @@ let factories = Array.from(new Array(parseInt(readline()))).map((_, i) => { retu
 	garrison: 0,
 	production: 0,
 	incomingAllies: 0,
-	incomingEnemies: 0
+	incomingEnemies: 0,
+	incomingBombs: [],
 } });
 
-let linkCount = parseInt(readline());
-for (let i = 0; i < linkCount; i++) {
-    let inputs = readline().split(' ');
-    let factory1 = parseInt(inputs[0]);
-    let factory2 = parseInt(inputs[1]);
-    let distance = parseInt(inputs[2]);
-    factories[factory1].links.push({ to: factory2, distance: distance });
-    factories[factory2].links.push({ to: factory1, distance: distance });
+let time = 0;
+
+{
+	let linkCount = parseInt(readline());
+	for (let i = 0; i < linkCount; i++) {
+		let inputs = readline().split(' ');
+		let factory1 = parseInt(inputs[0]);
+		let factory2 = parseInt(inputs[1]);
+		let distance = parseInt(inputs[2]);
+		factories[factory1].links.push({ to: factory2, distance: distance });
+		factories[factory2].links.push({ to: factory1, distance: distance });
+	}
+}
+
+function getBombAction() {
+	let enemies = factories.filter(f => f.owner === -1 && (f.garrison > 0 || f.incomingEnemies === 0) && f.incomingAllies === 0 && f.incomingBombs.length === 0);
+	if (enemies.length === 0)
+		return '';
+
+	let target = enemies.sort((a, b) => a.production > b.production ? 1 : -1)[0];
+
+	let alliesInRange = target.links.filter(f => f.owner === 1);
+
+	let source;
+	if (alliesInRange.length === 0) {
+		source = factories.filter(f => f.owner === 1)[0];
+	}
+	else {
+		source = factories[alliesInRange.sort((a, b) => a.distance > b.distance ? -1 : 1)[0].to];
+	}
+	printErr(JSON.stringify(source));
+
+	return 'BOMB ' + source.id + ' ' + target.id;
 }
 
 function compare(fa, fb) {
@@ -76,12 +102,19 @@ while (true) {
 			factories[id].production = arg3;
 			factories[id].incomingAllies = 0;
 			factories[id].incomingEnemies = 0;
+			factories[id].incomingBombs = [];
 		}
 		else if (entityType === 'TROOP') {
         	if (arg1 == 1)
 				factories[arg3].incomingAllies += arg4;
         	else
 				factories[arg3].incomingEnemies += arg4;
+		} else if (entityType === 'BOMB') {
+        	factories[arg2].incomingBombs.push({
+				owner: arg1,
+				to: arg3,
+				countdown: arg4
+			});
 		}
     }
 
@@ -104,5 +137,8 @@ while (true) {
 	else
 		action = move;
 
-	print(action + ';MSG ' + allyProd + '/' + enemyProd);
+	let bomb = getBombAction();
+	print(action + (bomb.length > 0 ? ';' + bomb : '') + ';MSG ' + allyProd + '/' + enemyProd);
+
+	time++;
 }
