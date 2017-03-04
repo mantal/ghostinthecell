@@ -57,10 +57,17 @@ function getExpectedEnemies(factory) {
 }
 
 function getFactoryValue(factory) {
-	if (factory.production === 0 && getExpectedEnemies(factory))
-		return -9999;//
-	return factory.production - getExpectedEnemies(factory);
+	const expectedEnemies = getExpectedEnemies(factory);
 
+	if (factory.production === 0 && expectedEnemies)
+		return -9999;//
+
+	let value = factory.production - expectedEnemies;
+
+	if (factory.owner === 0 && expectedEnemies > 0)
+		value -= 20;
+
+	return value;
 }
 
 function getAttackValue(source, target) {
