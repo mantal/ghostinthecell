@@ -35,12 +35,13 @@ function getBombAction() {
 	let source;
 	if (alliesInRange.length === 0) {
 		source = factories.filter(f => f.owner === 1)[0];
+		if (source === undefined)
+			return '';
 	}
 	else {
 		source = factories[alliesInRange.sort((a, b) => a.distance > b.distance ? -1 : 1)[0].to];
 	}
-	printErr(JSON.stringify(source));
-
+	
 	return 'BOMB ' + source.id + ' ' + target.id;
 }
 
@@ -117,9 +118,9 @@ while (true) {
         	else
 				factories[arg3].incomingEnemies += arg4;
 		} else if (entityType === 'BOMB') {
-        	factories[arg2].incomingBombs.push({
+        	factories[arg3].incomingBombs.push({
 				owner: arg1,
-				to: arg3,
+				from: arg2,
 				countdown: arg4
 			});
 		}
